@@ -53,7 +53,7 @@ images = []
 measurements = []
 left_right_images = []
 left_right_measurements = []
-correction = 0.2  # this is a parameter to tune
+correction = 0.9  # this is a parameter to tune
 for line in lines:
     source_path = line[0]
     # filename = source_path.split('/')[-1]
@@ -129,7 +129,21 @@ adam = Adam(lr = 0.0001)
 model.compile(optimizer=adam, loss='mse')
 model.summary()
 # model.compile(loss='mse',optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10, validation_data=(X_valid, y_valid))
+history_object = model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10, validation_data=(X_valid, y_valid))
 
 print('Save Modle')
 model.save('model.h5')
+
+### print the keys contained in the history object
+print(history_object.history.keys())
+
+import matplotlib.pyplot as plt
+### plot the training and validation loss for each epoch
+plt.plot(history_object.history['loss'])
+plt.plot(history_object.history['val_loss'])
+plt.title('model mean squared error loss')
+plt.ylabel('mean squared error loss')
+plt.xlabel('epoch')
+plt.legend(['training set', 'validation set'], loc='upper right')
+plt.show()
+
