@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Dropout
-from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import Convolution2D, Cropping2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers import Lambda
 from keras.optimizers import Adam
@@ -60,7 +60,7 @@ for line in lines:
     # current_path = './data/IMG/' + filename
     image = cv2.imread(source_path)
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = crop_resize(image)
+    # image = crop_resize(image)
     images.append(image)
     measurement = float(line[3])
     measurements.append(float(measurement))
@@ -72,7 +72,7 @@ for line in lines:
         left_img_path = line[1]
         left_img = cv2.imread(left_img_path)
         # left_img = cv2.cvtColor(left_img, cv2.COLOR_BGR2RGB)
-        left_img = crop_resize(image)
+        # left_img = crop_resize(image)
         left_right_images.append(left_img)
         steering_left = measurement + correction
         left_right_measurements.append(steering_left)
@@ -80,7 +80,7 @@ for line in lines:
         right_img_path = line[2]
         right_img = cv2.imread(right_img_path)
         # right_img = cv2.cvtColor(right_img, cv2.COLOR_BGR2RGB)
-        right_img = crop_resize(right_img)
+        # right_img = crop_resize(right_img)
         left_right_images.append(right_img)
         steering_right = measurement - correction
         left_right_measurements.append(steering_right)
@@ -101,10 +101,11 @@ y_train = np.concatenate((y_train, y_train2))
 # model.add(Flatten(input_shape=(160, 320, 3)))
 # model.add(Dense(1))
 
-input_shape = (64,64,3)
-# input_shape = (160, 320, 3)
+# input_shape = (64,64,3)
+input_shape = (160, 320, 3)
 model = Sequential()
-model.add(Lambda(lambda x: x/255 - 0.5, input_shape = input_shape))
+model.add(Lambda(lambda x: x/127.5 - 1., input_shape = input_shape))
+model.add(Cropping2D(cropping=((70,25),(0,0))))
 model.add(Convolution2D(24, 5, 5, border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
 model.add(Activation('relu'))
 model.add(Convolution2D(36, 5, 5, border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
@@ -127,7 +128,6 @@ model.add(Dense(1, W_regularizer = l2(0.001)))
 adam = Adam(lr = 0.0001)
 model.compile(optimizer=adam, loss='mse')
 model.summary()
-
 # model.compile(loss='mse',optimizer='adam')
 model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10, validation_data=(X_valid, y_valid))
 
