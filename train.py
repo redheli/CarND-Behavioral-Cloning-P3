@@ -8,7 +8,8 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers import Lambda
 from keras.optimizers import Adam
 from keras.regularizers import l2
-
+from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 
 lines = []
 # log_file = "./data/driving_log.csv"
@@ -50,12 +51,15 @@ for log_file in log_files:
 
 images = []
 measurements = []
-correction = 0.9 # this is a parameter to tune
+left_right_images = []
+left_right_measurements = []
+correction = 0.9  # this is a parameter to tune
 for line in lines:
     source_path = line[0]
     # filename = source_path.split('/')[-1]
     # current_path = './data/IMG/' + filename
     image = cv2.imread(source_path)
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = crop_resize(image)
     images.append(image)
     measurement = float(line[3])
@@ -67,23 +71,31 @@ for line in lines:
         #
         left_img_path = line[1]
         left_img = cv2.imread(left_img_path)
+        # left_img = cv2.cvtColor(left_img, cv2.COLOR_BGR2RGB)
         left_img = crop_resize(image)
-        images.append(left_img)
+        left_right_images.append(left_img)
         steering_left = measurement + correction
-        measurements.append(steering_left)
+        left_right_measurements.append(steering_left)
         #
         right_img_path = line[2]
         right_img = cv2.imread(right_img_path)
+        # right_img = cv2.cvtColor(right_img, cv2.COLOR_BGR2RGB)
         right_img = crop_resize(right_img)
-        images.append(right_img)
+        left_right_images.append(right_img)
         steering_right = measurement - correction
-        measurements.append(steering_right)
+        left_right_measurements.append(steering_right)
 
 
 X_train = np.array(images)
 y_train = np.array(measurements)
+X_train, y_train = shuffle(X_train, y_train)
+X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.3, random_state=42)
 
-# model
+X_train2 = np.array(left_right_images)
+y_train2 = np.array(left_right_measurements)
+
+X_train = np.concatenate((X_train, X_train2))
+y_train = np.concatenate((y_train, y_train2))
 # model = Sequential()
 # model.add(Lambda(lambda x: (x / 255.0) - 0.5, input_shape=(160,320,3)))
 # model.add(Flatten(input_shape=(160, 320, 3)))
@@ -117,7 +129,7 @@ model.compile(optimizer=adam, loss='mse')
 model.summary()
 
 # model.compile(loss='mse',optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=6)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=10, validation_data=(X_valid, y_valid))
 
 print('Save Modle')
 model.save('model.h5')
