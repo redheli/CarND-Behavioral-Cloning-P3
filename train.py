@@ -26,13 +26,20 @@ for file in glob.glob("*.csv"):
     print(file)
     log_files.append(file)
 
+
+# Crop image to remove the sky and driving deck, resize to 64x64 dimension
+def crop_resize(img):
+    cropped = cv2.resize(img[60:140, :], (64, 64))
+    return cropped
+
+
 for log_file in log_files:
     zero_steering_count = 0
     with open(file=log_file) as csvfile:
         reader = csv.reader(csvfile)
         for line in reader:
             if float(line[3]) == 0:
-                if zero_steering_count == 30:
+                if zero_steering_count == 5:
                     lines.append(line)
                     zero_steering_count = 0
                 zero_steering_count += 1
@@ -43,17 +50,35 @@ for log_file in log_files:
 
 images = []
 measurements = []
+correction = 0.9 # this is a parameter to tune
 for line in lines:
     source_path = line[0]
     # filename = source_path.split('/')[-1]
     # current_path = './data/IMG/' + filename
     image = cv2.imread(source_path)
+    image = crop_resize(image)
     images.append(image)
-    measurement = line[3]
+    measurement = float(line[3])
     measurements.append(float(measurement))
     # flip
-    images.append(cv2.flip(image, 1))
-    measurements.append(float(measurement)*-1.0)
+    if measurement != 0:
+        images.append(cv2.flip(image, 1))
+        measurements.append(float(measurement)*-1.0)
+        #
+        left_img_path = line[1]
+        left_img = cv2.imread(left_img_path)
+        left_img = crop_resize(image)
+        images.append(left_img)
+        steering_left = measurement + correction
+        measurements.append(steering_left)
+        #
+        right_img_path = line[2]
+        right_img = cv2.imread(right_img_path)
+        right_img = crop_resize(right_img)
+        images.append(right_img)
+        steering_right = measurement - correction
+        measurements.append(steering_right)
+
 
 X_train = np.array(images)
 y_train = np.array(measurements)
@@ -64,8 +89,8 @@ y_train = np.array(measurements)
 # model.add(Flatten(input_shape=(160, 320, 3)))
 # model.add(Dense(1))
 
-# input_shape = (64,64,3)
-input_shape = (160, 320, 3)
+input_shape = (64,64,3)
+# input_shape = (160, 320, 3)
 model = Sequential()
 model.add(Lambda(lambda x: x/255 - 0.5, input_shape = input_shape))
 model.add(Convolution2D(24, 5, 5, border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
@@ -88,11 +113,11 @@ model.add(Dropout(0.5))
 model.add(Dense(10, W_regularizer = l2(0.001)))
 model.add(Dense(1, W_regularizer = l2(0.001)))
 adam = Adam(lr = 0.0001)
-model.compile(optimizer=adam, loss='mse', metrics=['accuracy'])
+model.compile(optimizer=adam, loss='mse')
 model.summary()
 
 # model.compile(loss='mse',optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=20)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=6)
 
 print('Save Modle')
 model.save('model.h5')
