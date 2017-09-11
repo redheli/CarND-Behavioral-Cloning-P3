@@ -53,7 +53,7 @@ images = []
 measurements = []
 left_right_images = []
 left_right_measurements = []
-correction = 0.9  # this is a parameter to tune
+correction = 0.2  # this is a parameter to tune
 for line in lines:
     source_path = line[0]
     # filename = source_path.split('/')[-1]
