@@ -15,6 +15,20 @@ The goals / steps of this project are the following:
 [image3]: ./images/speed.png "Speed Value"
 [image4]: ./images/flip.png "Flip Center Image"
 [image5]: ./images/corp.png "Corp Image"
+[image6]: ./images/sharp-turn-resize.png "Sharp Turn Resized"
+[image7]: ./images/multi-cameras.png "multi-cameras"
+[image8]: ./images/model.png "model"
+[image9]: ./images/train-loss.png "train-loss"
+[image10]: ./images/loss-plot.png "loss-plot"
+
+### Track1 Video
+<script src="http://vjs.zencdn.net/4.0/video.js"></script>
+
+<video id="pelican-installation" class="video-js vjs-default-skin" controls
+preload="auto" width="683" height="384"
+data-setup="{}">
+<source src="run1.mp4" type='video/mp4'>
+</video>
 
 ---
 ### Data Collection And Preprocessing
@@ -49,15 +63,15 @@ Because in most of the images,the up part is sky, and bottom part are car , whic
 At fist try, I resize the image to 64x64. It make the training faster, as input data size is small. But when test with autonouse mode, It always fail at one sharp turn, the car leave the track surface.
 TODO image
 I notice the road edge of that place is defferent with others, and in resize the image , the edge is blur. This is may confuse the model. I remove the step of resize, then the model works well.  Of course , the training time become longer.
-TODO image
+![alt text][image6]
 
 
 ### Use Multiple Cameras
 
 I use all three cameras as training inputs. This is because we need to handle the issue of recovering from being off-center driving.
 ** Turns out this is the most important step to make the model work. ** If we train the model to associate a given image from the center camera with a left turn, then we could also train the model to associate the corresponding image from the left camera with a somewhat softer left turn.And we could train the model to associate the corresponding image from the right camera with an even harder left turn.
-To estimate the steering angle of the left and right images, I use a correction value of 0.2
-TODO image
+To estimate the steering angle of the left and right images, I use a correction value of 0.9. At first I use 0.2, but the car's steerig change is too slow for sharp turning.
+![alt text][image7]
 
 ### Model Architecture and Training Strategy
 
@@ -68,12 +82,15 @@ I borrow the model from [End to End Learning for Self-Driving Cars](http://image
 * flatten the data to input to FC layer
 * The FC layers to 80, 40, 16, 10 and 1. At each layer, 50% Dropout is also applied for the first 3 dense layer to avoid overfitting.
 * Adam optimizer is used. I started with 0.0001 learning rate ,and It produces a smoother ride. Therefore, I kept it.
-TODO image
+![alt text][image8]
 
 Here is tarining result. The final validation loss is 0.1283.
 Epoch number is 10. I think the loss  is small enough.
 
-TODO image
+![alt text][image9]
+
+## Visualization Loss
+![alt text][image10]
 
 ## Training Data
 
