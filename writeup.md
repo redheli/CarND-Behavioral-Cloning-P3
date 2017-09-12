@@ -34,15 +34,18 @@ data-setup="{}">
 ### Data Collection And Preprocessing
 
 At beginning I run the training simulator with keyboard buttons to control the steering angle.
-When analysis the data, I found the significant proportion of the data is for driving straight, see following histogram.    
+When analysis the data, I found the significant proportion of the data is for driving straight, see following histogram.
+
 ![alt text][image1]
 
 But in the actual simulation track, the straight road is not so much long distance. Then why I got so many zero steering angle? This is because the design of the steering value with keyboard control. It is impossible mentain a certain steering value with keyboard. press the keybaord will increase/decrease the angle , once release the steering anlge turn to zero. So when drive the car, I cannot make smooth curlve path , and the car turn with a lot line segments.
 The next question comes: Is it worth to deal with such data? I saw some people try to filter out the zero steering vale. But intuitive tell me, I need better data.
 So I recollect the data with mouse control. It turns out the steering angle distribution is more reasonable. As the track is anti-clockwise , the steering angle have more negative value.
+
 ![alt text][image2]
 
 I drive the car with speed around 10 mph, as my driving skill only can stable the car in such speed :)
+
 ![alt text][image3]
 
 I collect two laps data. And I also collect two times data just at one sharp turn.
@@ -52,10 +55,12 @@ I collect two laps data. And I also collect two times data just at one sharp tur
 I flip the center camera images and steering measurements.
 In track 1, most of the turns are left turns, flipping can make more right turn data. So the model wont bials to left turn.
 As a result, the network would learn both left and right turns properly.
+
 ![alt text][image4]
 
 I also corp the images, for all center,left,right images.
 Because in most of the images,the up part is sky, and bottom part are car , which are not very useful for training, and on the other hand, it might lead to overfitting. So that I decided to crop out only the most useful part.
+
 ![alt text][image5]
 
 ### Resize Image?
@@ -63,6 +68,7 @@ Because in most of the images,the up part is sky, and bottom part are car , whic
 At fist try, I resize the image to 64x64. It make the training faster, as input data size is small. But when test with autonouse mode, It always fail at one sharp turn, the car leave the track surface.
 TODO image
 I notice the road edge of that place is defferent with others, and in resize the image , the edge is blur. This is may confuse the model. I remove the step of resize, then the model works well.  Of course , the training time become longer.
+
 ![alt text][image6]
 
 
@@ -71,6 +77,7 @@ I notice the road edge of that place is defferent with others, and in resize the
 I use all three cameras as training inputs. This is because we need to handle the issue of recovering from being off-center driving.
 ** Turns out this is the most important step to make the model work. ** If we train the model to associate a given image from the center camera with a left turn, then we could also train the model to associate the corresponding image from the left camera with a somewhat softer left turn.And we could train the model to associate the corresponding image from the right camera with an even harder left turn.
 To estimate the steering angle of the left and right images, I use a correction value of 0.9. At first I use 0.2, but the car's steerig change is too slow for sharp turning.
+
 ![alt text][image7]
 
 ### Model Architecture and Training Strategy
