@@ -22,13 +22,9 @@ The goals / steps of this project are the following:
 [image10]: ./images/loss-plot.png "loss-plot"
 
 ### Track1 Video
-<script src="http://vjs.zencdn.net/4.0/video.js"></script>
 
-<video id="pelican-installation" class="video-js vjs-default-skin" controls
-preload="auto" width="683" height="384"
-data-setup="{}">
-<source src="run1.mp4" type='video/mp4'>
-</video>
+[**Demo 1**](https://youtu.be/ylsk3rekGVI): driving on the trained track 1  (Click to see the full video)
+
 
 ---
 ### Data Collection And Preprocessing
